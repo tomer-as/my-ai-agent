@@ -1,34 +1,24 @@
 import os
-import mysql.connector
-from urllib.parse import urlparse
+import requests
 
-def get_db_connection():
-    # מושך את ה-URL שהמערכת הגדירה אוטומטית
-    db_url = os.getenv("DATABASE_URL")
+def query_order_status(phone_number):
+    # כתובת ה-Production Webhook הרשמית שלך
+    N8N_WEBHOOK_URL = "https://tomeras.app.n8n.cloud/webhook/customer-lookup"
     
-    if not db_url:
-        raise Exception("DATABASE_URL environment variable is not set!")
-
-    # ניתוח ה-URL כדי לחלץ את הפרטים
-    url = urlparse(db_url)
+    # אריזת מספר הטלפון של הלקוח שנכנס לצ'אט
+    payload = {
+        "phone": phone_number
+    }
     
-    return mysql.connector.connect(
-        host=url.hostname,
-        port=url.port,
-        user=url.username,
-        password=url.password,
-        database=url.path[1:] # הסרת ה-/ מהתחלת שם בסיס הנתונים
-    )
-
-def query_order_status(order_id):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    
-    # שאילתה לדוגמה (תלוי במבנה הטבלאות שלך)
-    query = "SELECT * FROM orders WHERE order_id = %s"
-    cursor.execute(query, (order_id,))
-    result = cursor.fetchone()
-    
-    cursor.close()
-    connection.close()
-    return result
+    try:
+        # שליחת הפנייה ל-n8n והמתנה לעיבוד הנתונים
+        response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=15)
+        
+        if response.status_code == 200:
+            # מחזיר את מחרוזת ה-JSON המלאה (בזכות ה-JSON.stringify שעשית ב-n8n)
+            return response.text 
+        else:
+            return '{"status": "error", "message": "המערכת נתקלה בשגיאה בקבלת הנתונים."}'
+            
+    except Exception as e:
+        return f'{{"status": "error", "message": "{str(e)}"}}'

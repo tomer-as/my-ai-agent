@@ -1,13 +1,18 @@
 import os
 from db_connector import query_order_status
 
-def handle_customer_request(phone_number):
+def query_customer_by_phone(phone_number: str) -> str:
+    """
+    הפונקציה הזו מקבלת מספר טלפון של לקוח, פונה למנוע האוטומציה ב-n8n,
+    ומחזירה ניתוח מלא של היסטוריית ההחזרות, מוקשי מידות (Product Traps) והמלצת מידה מדויקת.
+    יש להשתמש בה מיד כשהלקוח מספק מספר טלפון.
+    """
     if not phone_number:
-        return "אנא ספק מספר טלפון כדי שאוכל לעזור לך להתאים מידה."
+        return "שגיאה: לא סופק מספר טלפון."
     
-    # הפעלת הצינור החי והרשמי שלנו ל-n8n
+    # הפעלת הצינור שבנינו ל-n8n
     return query_order_status(phone_number)
 
 if __name__ == "__main__":
-    # הרצת טסט פנימי מהיר לראות שהקוד רץ ללא שגיאות סינטקס
-    print(handle_customer_request("052-1234567"))
+    # בדיקה מקומית מהירה
+    print(query_customer_by_phone("050-1112267"))
